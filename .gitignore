@@ -1,0 +1,42 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# --- 虚拟环境 ---
+.venv/
+venv/
+env/
+
+# --- 测试 / 静态检查缓存 ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- IDE（个人本地配置，不入库）---
+.idea/
+*.iml
+.vscode/
+
+# --- 运行产物（可由命令重新生成：BER 表、模型、图片、训练记录）---
+outputs/
+
+# --- 模型与大文件 ---
+*.pt
+*.pth
+*.onnx
+*.h5
+*.ckpt
+
+# --- 日志与临时文件 ---
+*.log
+*.tmp
+*.bak
+
+# --- 环境变量与密钥 ---
+.env
+
+# --- 操作系统文件 ---
+.DS_Store
+Thumbs.db
+desktop.ini
