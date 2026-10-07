@@ -1,7 +1,9 @@
 """Compare two training runs (baseline channel vs changed channel) and check
 whether the stabilised BER stays within a relative tolerance band (+/-15%).
 
-The figure follows the same style as outputs/ber_vs_episode.png:
+The figure keeps only the greedy-validation curves (the clean, exploration-free
+performance measure) plus the reference lines; the noisy per-episode training
+trace is intentionally left out. Style follows outputs/ber_vs_episode.png:
 two stacked panels (3:1, shared x axis), DejaVu Sans, dpi=180.
 
 Usage:
@@ -19,7 +21,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from elfcomm.config import save_json
-from elfcomm.plots import column, ema, read_csv
+from elfcomm.plots import column, read_csv
 
 BLUE = "#176B9B"
 ORANGE = "#D46B27"
@@ -66,18 +68,14 @@ def main():
     runs = [(args.baseline, BLUE, run_label(args.baseline)),
             (args.changed, ORANGE, run_label(args.changed))]
     for directory, color, label in runs:
-        rows = read_csv(Path(directory) / "training_history.csv")
-        x, ber = column(rows, "episode"), column(rows, "ber_estimate")
-        top.semilogy(x, ber, color=color, alpha=0.18, linewidth=0.8)
-        top.semilogy(x, ema(ber, 0.1), color=color, linewidth=1.8, label=f"training EMA — {label}")
         validation = read_csv(Path(directory) / "validation_history.csv")
         xv, bv = column(validation, "episode"), column(validation, "ber_estimate")
-        top.semilogy(xv, bv, "o--", color=color, markersize=4, linewidth=0.9,
+        top.semilogy(xv, bv, "o--", color=color, markersize=4, linewidth=1.1,
                      label=f"greedy validation — {label}")
         bottom.plot(xv, bv / baseline_stable * 100.0 - 100.0, "o--", color=color,
-                    markersize=4, linewidth=0.9, label=f"greedy validation — {label}")
+                    markersize=4, linewidth=1.0, label=f"greedy validation — {label}")
     top.axhspan(baseline_stable * (1 - args.tolerance), baseline_stable * (1 + args.tolerance),
-                color=BLUE, alpha=0.10, label=f"+/-{args.tolerance:.0%} band of baseline")
+                color=BLUE, alpha=0.12, label=f"+/-{args.tolerance:.0%} band of baseline")
     top.axhline(baseline_stable, color=BLUE, linestyle="--", linewidth=1.1,
                 label=f"baseline stable ~ {baseline_stable:.2e}")
     top.axhline(changed_stable, color=ORANGE, linestyle="--", linewidth=1.1,
@@ -85,24 +83,22 @@ def main():
     top.axhline(args.target_ber, color=RED, linestyle=":", linewidth=1.1,
                 label=f"Target BER {args.target_ber:g}")
     top.set(ylabel="Post-Polar payload BER estimate",
-            title="BER versus training episodes — retraining after channel-parameter change")
+            title="BER versus training episodes — retraining after channel-parameter change\n"
+                  f"stabilised BER: baseline {baseline_stable:.2e} -> changed {changed_stable:.2e}"
+                  f"   |   ratio {ratio:.3f}   |   criterion ±{args.tolerance:.0%}: "
+                  f"{'PASS' if within else 'FAIL'}")
     top.grid(which="both", alpha=0.18)
-    top.legend(fontsize=8, loc="upper right")
-    top.annotate(f"baseline stable ~= {baseline_stable:.3e}\nchanged stable ~= {changed_stable:.3e}\n"
-                 f"ratio = {ratio:.3f}   criterion |ratio-1| <= {args.tolerance:g}: "
-                 f"{'PASS' if within else 'FAIL'}",
-                 xy=(0.02, 0.03), xycoords="axes fraction", fontsize=9,
-                 bbox=dict(boxstyle="round", facecolor="white", alpha=0.85))
+    top.set_ylim(8e-6, 3e-4)  # frame the band, the curves and the target line
+    top.legend(fontsize=8, loc="upper right", framealpha=0.9)
     bottom.axhline(0.0, color="#666666", linewidth=1.0)
     bottom.axhline(+args.tolerance * 100, color=RED, linestyle="--", linewidth=1.0,
-                   label=f"+{args.tolerance:.0%} criterion")
-    bottom.axhline(-args.tolerance * 100, color=RED, linestyle="--", linewidth=1.0,
-                   label=f"-{args.tolerance:.0%} criterion")
+                   label=f"±{args.tolerance:.0%} criterion")
+    bottom.axhline(-args.tolerance * 100, color=RED, linestyle="--", linewidth=1.0)
     bottom.set(xlabel="Training episode (adaptation process)",
                ylabel="Validation BER vs baseline (%)")
     bottom.set_ylim(-30, 80)  # zoom on the criterion region; the early transient goes off-scale
     bottom.grid(alpha=0.2)
-    bottom.legend(fontsize=8, loc="upper right")
+    bottom.legend(fontsize=8, loc="upper right", framealpha=0.9)
     fig.savefig(output / "retrain_comparison.png", dpi=180)
     plt.close(fig)
     save_json(output / "comparison_summary.json", {
