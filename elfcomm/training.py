@@ -89,16 +89,11 @@ def train(cfg, table, scenario=None, occupied_bands=None):
     history, validation_history = [], []
     best_reward = -np.inf
     start = time.perf_counter()
-    shift = cfg.get("channel_shift") or {}
-    shift_enabled = bool(shift.get("enabled"))
-    shift_episode = int(shift.get("episode", 0)) if shift_enabled else None
     fixed_environment = cfg.get("fixed_environment")
     for episode in range(1, settings["episodes"] + 1):#主循环
         fraction = min(1, (episode - 1) / max(1, settings["episodes"] * settings["epsilon_decay_fraction"]))
         epsilon = settings["epsilon_start"] + fraction * (settings["epsilon_end"] - settings["epsilon_start"])
         phase_environment = fixed_environment
-        if shift_enabled:
-            phase_environment = shift["after_environment"] if episode >= shift_episode else shift["before_environment"]
         state, mask = env.reset(environment=phase_environment, occupied_bands=occupied_bands)#每轮的重采样环境（对比实验时固定信道）
         records, losses = [], []
         done = False
@@ -150,8 +145,6 @@ def train(cfg, table, scenario=None, occupied_bands=None):
         "run_label": cfg.get("run_label", "relative_link_simulation"),
         "reliability_certified": False,
     })
-    from .plots import plot_channel_shift_recovery, plot_training
+    from .plots import plot_training
     plot_training(output, cfg["training"]["ema_alpha"], cfg["objective"]["target_ber"])
-    if shift_enabled:
-        plot_channel_shift_recovery(output, shift_episode, cfg)
     return output
