@@ -60,11 +60,14 @@ def main():
                       color=color, linewidth=1.8, label=f"training EMA — {label}")
         validation = read_csv(Path(directory) / "validation_history.csv")
         axes.semilogy(column(validation, "episode"), column(validation, "ber_estimate"),
-                      "o", color=color, markersize=3, alpha=0.85, label=f"greedy validation — {label}")
+                      "o--", color=color, markersize=3, linewidth=0.9, alpha=0.85,
+                      label=f"greedy validation — {label}")
     axes.axhspan(baseline_stable * (1 - args.tolerance), baseline_stable * (1 + args.tolerance),
                  color="#176B9B", alpha=0.12, label=f"+/-{args.tolerance:.0%} band of baseline")
     axes.axhline(baseline_stable, color="#176B9B", linestyle="--", linewidth=1.2,
                  label=f"baseline stable ~= {baseline_stable:.3e}")
+    axes.axhline(changed_stable, color="#D46B27", linestyle="--", linewidth=1.2,
+                 label=f"changed stable ~= {changed_stable:.3e}")
     axes.set(xlabel="Training episode (adaptation process)",
              ylabel="Post-Polar payload BER estimate",
              title="Retraining after channel-parameter change: stabilised BER comparison")
