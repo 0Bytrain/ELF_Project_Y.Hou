@@ -3,6 +3,8 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
+from .config import save_json
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -106,3 +108,47 @@ def plot_table(table, output):
     fig.suptitle("Real Polar Monte Carlo table — zero-error points retain sampling uncertainty")
     fig.savefig(Path(output) / "ber_table.png", dpi=180)
     plt.close(fig)
+
+
+def plot_channel_shift_recovery(output, shift_episode, cfg=None):
+    """BER versus training episode around a mid-training channel-parameter change."""
+    output = Path(output)
+    cfg = cfg or {}
+    rows = read_csv(output / "training_history.csv")
+    validation = read_csv(output / "validation_history.csv")
+    alpha = cfg.get("training", {}).get("ema_alpha", 0.1)
+    target_ber = cfg.get("objective", {}).get("target_ber", 1e-4)
+    window = int(cfg.get("channel_shift", {}).get("recovery_window", 3))
+    episode = column(rows, "episode")
+    ber = column(rows, "ber_estimate")
+    validation_episode = column(validation, "episode")
+    validation_ber = column(validation, "ber_estimate")
+    before = validation_ber[validation_episode < shift_episode][-window:]
+    after = validation_ber[validation_episode > shift_episode][-window:]
+    baseline = float(np.nanmean(before)) if before.size else float("nan")
+    final = float(np.nanmean(after)) if after.size else float("nan")
+    ratio = final / baseline if np.isfinite(baseline) and np.isfinite(final) and baseline > 0 else float("nan")
+    fig, axes = plt.subplots(figsize=(10, 6), constrained_layout=True)
+    axes.semilogy(episode, ber, color="#176B9B", alpha=0.25, linewidth=0.8, label="Per-episode BER estimate")
+    axes.semilogy(episode, ema(ber, alpha), color="#176B9B", linewidth=2.0, label="Training EMA")
+    axes.semilogy(validation_episode, validation_ber, "o--", color="#D46B27", markersize=4, label="Greedy validation")
+    axes.axvline(shift_episode, color="#AD3434", linestyle="--", linewidth=1.6,
+                 label=f"Channel parameters changed (episode {shift_episode})")
+    axes.axhline(target_ber, color="#666666", linestyle=":", label=f"Target BER {target_ber:g}")
+    axes.set(xlabel="Training episode (adaptation process)", ylabel="Post-Polar payload BER estimate",
+             title="DQN adaptation after channel-parameter change")
+    axes.grid(which="both", alpha=0.2)
+    axes.legend(fontsize=9)
+    if np.isfinite(ratio):
+        axes.annotate(f"pre-shift baseline ~= {baseline:.2e}\nfinal stable ~= {final:.2e}\n"
+                      f"final / baseline = {ratio:.2f}  (criterion <= 1.15)",
+                      xy=(0.02, 0.03), xycoords="axes fraction", fontsize=9,
+                      bbox=dict(boxstyle="round", facecolor="white", alpha=0.85))
+    fig.savefig(output / "adaptation_after_channel_shift.png", dpi=180)
+    plt.close(fig)
+    save_json(output / "adaptation_summary.json", {
+        "shift_episode": int(shift_episode), "recovery_window": window,
+        "baseline_mean_ber": baseline, "final_mean_ber": final, "ratio": ratio,
+        "criterion": "final_mean_ber / baseline_mean_ber <= 1.15",
+        "criterion_met": bool(np.isfinite(ratio) and ratio <= 1.15),
+    })

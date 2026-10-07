@@ -26,12 +26,12 @@ def summarize(records):
     }
 
 
-def evaluate_policy(agent, cfg, table, episode_count=None, occupied_bands=None):
+def evaluate_policy(agent, cfg, table, episode_count=None, occupied_bands=None, environment=None):
     records = []
     count = episode_count or cfg["training"]["evaluation_episodes"]
     for episode in range(count):
         env = CommunicationEnvironment(cfg, table, seed=cfg["seed"] + 100000 + episode)
-        state, mask = env.reset(occupied_bands=occupied_bands)
+        state, mask = env.reset(environment=environment, occupied_bands=occupied_bands)
         done = False
         while not done:
             action = agent.act(state, mask, epsilon=0.0)
@@ -84,15 +84,21 @@ def train(cfg, table, scenario=None, occupied_bands=None):
     output = resolve_path(cfg["output_dir"])
     output.mkdir(parents=True, exist_ok=True)
     save_json(output / "run_config.json", cfg)
-    env = CommunicationEnvironment(cfg, table, seed=cfg["seed"])
+    env = CommunicationEnvironment(cfg, table, seed=cfg["seed"])   #创建环境
     agent = DQNAgent(env.state_dim, action_shape(cfg), settings, cfg["seed"], device=settings["device"])
     history, validation_history = [], []
     best_reward = -np.inf
     start = time.perf_counter()
-    for episode in range(1, settings["episodes"] + 1):
+    shift = cfg.get("channel_shift") or {}
+    shift_enabled = bool(shift.get("enabled"))
+    shift_episode = int(shift.get("episode", 0)) if shift_enabled else None
+    for episode in range(1, settings["episodes"] + 1):#主循环
         fraction = min(1, (episode - 1) / max(1, settings["episodes"] * settings["epsilon_decay_fraction"]))
         epsilon = settings["epsilon_start"] + fraction * (settings["epsilon_end"] - settings["epsilon_start"])
-        state, mask = env.reset(occupied_bands=occupied_bands)
+        phase_environment = None
+        if shift_enabled:
+            phase_environment = shift["after_environment"] if episode >= shift_episode else shift["before_environment"]
+        state, mask = env.reset(environment=phase_environment, occupied_bands=occupied_bands)#每轮的重采样环境（突变实验时按轮数切换）
         records, losses = [], []
         done = False
         while not done:
@@ -106,7 +112,8 @@ def train(cfg, table, scenario=None, occupied_bands=None):
             records.append(info)
             state, mask = next_state, next_mask
         probe_state, probe_mask = env.reset(
-            environment=scenario if scenario is not None else cfg["link"]["reference_environment"],
+            environment=phase_environment if phase_environment is not None else
+            (scenario if scenario is not None else cfg["link"]["reference_environment"]),
             occupied_bands=occupied_bands, dynamic=False)
         greedy_index = int(agent.act(probe_state, probe_mask, epsilon=0.0))
         greedy = {"greedy_action_index": greedy_index}
@@ -123,7 +130,7 @@ def train(cfg, table, scenario=None, occupied_bands=None):
                "loss": float(np.mean(losses)) if losses else None, "elapsed_s": time.perf_counter() - start}
         history.append(row)
         if episode == 1 or episode % settings["evaluation_interval"] == 0 or episode == settings["episodes"]:
-            metrics, evaluation_records = evaluate_policy(agent, cfg, table, occupied_bands=occupied_bands)
+            metrics, evaluation_records = evaluate_policy(agent, cfg, table, occupied_bands=occupied_bands, environment=phase_environment)
             validation_history.append({"episode": episode, **metrics})
             if metrics["mean_reward"] > best_reward:
                 best_reward = metrics["mean_reward"]
@@ -142,6 +149,8 @@ def train(cfg, table, scenario=None, occupied_bands=None):
         "run_label": cfg.get("run_label", "relative_link_simulation"),
         "reliability_certified": False,
     })
-    from .plots import plot_training
+    from .plots import plot_channel_shift_recovery, plot_training
     plot_training(output, cfg["training"]["ema_alpha"], cfg["objective"]["target_ber"])
+    if shift_enabled:
+        plot_channel_shift_recovery(output, shift_episode, cfg)
     return output
