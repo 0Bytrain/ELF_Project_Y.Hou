@@ -100,6 +100,7 @@ def main():
                    label=f"-{args.tolerance:.0%} criterion")
     bottom.set(xlabel="Training episode (adaptation process)",
                ylabel="Validation BER vs baseline (%)")
+    bottom.set_ylim(-30, 80)  # zoom on the criterion region; the early transient goes off-scale
     bottom.grid(alpha=0.2)
     bottom.legend(fontsize=8, loc="upper right")
     fig.savefig(output / "retrain_comparison.png", dpi=180)
