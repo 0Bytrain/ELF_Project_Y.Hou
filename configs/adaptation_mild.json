@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "seed": 20260924,
+  "output_dir": "outputs/adaptation_mild",
+  "run_label": "channel_shift_adaptation_mild",
+  "actions": {
+    "frequency_hz": [5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29],
+    "modulation": ["BPSK", "QPSK", "MSK"],
+    "code_rate": [0.3333333333333333, 0.5, 0.6666666666666666, 0.75],
+    "symbol_rate": [0.25, 0.5, 0.6666666666666666]
+  },
+  "polar": {"n": 256, "crc_bits": 11, "list_size": 8},
+  "link": {
+    "calibration_mode": "relative",
+    "fixed_tx_power_kw": 500.0,
+    "reference_snr_db": 20.0,
+    "reference_frequency_hz": 5.0,
+    "reference_noise_bandwidth_hz": 1.0,
+    "receiver_noise_rms_pt": 0.1,
+    "source_spectrum": "flat_field_assumption",
+    "range_spreading_exponent": 1.0,
+    "max_occupied_bandwidth_hz": 1.0,
+    "rrc_rolloff": 0.35,
+    "msk_occupied_bandwidth_factor": 1.5,
+    "guard_band_hz": 0.5,
+    "allowed_band_hz": [3.0, 30.0],
+    "noise_spectrum_exponent": 1.0,
+    "reference_environment": {
+      "ice_thickness_m": 1.5,
+      "ice_temperature_c": -10.0,
+      "seawater_conductivity_s_m": 4.0,
+      "receiver_depth_m": 50.0,
+      "horizontal_distance_m": 200.0,
+      "environment_noise_asd_pt_rt_hz": 0.0
+    },
+    "water_depth_m": 100.0,
+    "seawater_relative_permittivity": 80.0,
+    "ice": {
+      "epsilon_static": 91.0,
+      "epsilon_infinite": 3.2,
+      "conductivity_s_m": 0.00001,
+      "relaxation_model": "arrhenius_pure_ice_approximation",
+      "relaxation_prefactor_s": 5.3e-16,
+      "relaxation_activation_ev": 0.571
+    }
+  },
+  "environment": {
+    "ranges": {
+      "ice_thickness_m": [1.0, 2.0],
+      "ice_temperature_c": [-25.0, -2.0],
+      "seawater_conductivity_s_m": [2.5, 5.0],
+      "receiver_depth_m": [30.0, 70.0],
+      "horizontal_distance_m": [150.0, 250.0],
+      "environment_noise_asd_pt_rt_hz": [0.01, 1.0]
+    },
+    "step_drift_fraction": 0.01,
+    "noise_step_log_std": 0.08,
+    "occupied_bands": [],
+    "random_occupancy": false,
+    "random_band_count_max": 2,
+    "random_band_width_hz": [0.5, 2.5],
+    "random_hard_probability": 0.7,
+    "random_interference_asd_pt_rt_hz": [0.3, 3.0],
+    "occupancy_change_probability": 0.04
+  },
+  "objective": {
+    "target_ber": 0.0001,
+    "target_goodput_bps": 1.0,
+    "preamble_symbols": 16,
+    "reward_goodput_weight": 1.0,
+    "reward_ber_violation_weight": 1.0,
+    "reward_rate_shortfall_weight": 0.1,
+    "switch_penalty": 0.02,
+    "outage_reward": -1.0
+  },
+  "ber_table": {
+    "esn0_db": [-9, -6, -3, 0, 2, 4, 6, 8, 10, 12, 15, 18, 21, 24, 27, 30],
+    "min_frames": 32,
+    "max_frames": 256,
+    "target_bit_errors": 200,
+    "path": "outputs/ber_table.json"
+  },
+  "training": {
+    "episodes": 500,
+    "steps_per_episode": 24,
+    "gamma": 0.95,
+    "learning_rate": 0.0003,
+    "batch_size": 128,
+    "replay_capacity": 50000,
+    "warmup_steps": 512,
+    "target_tau": 0.01,
+    "tensor_rank": 12,
+    "hidden_size": 128,
+    "gradient_clip": 5.0,
+    "epsilon_start": 1.0,
+    "epsilon_end": 0.05,
+    "epsilon_decay_fraction": 0.8,
+    "evaluation_interval": 20,
+    "evaluation_episodes": 12,
+    "ema_alpha": 0.1,
+    "device": "cpu",
+    "torch_threads": 2
+  },
+  "validation": {"min_frames": 100, "max_frames": 5000, "target_bit_errors": 300},
+  "channel_shift": {
+    "enabled": true,
+    "episode": 250,
+    "recovery_window": 3,
+    "before_environment": {
+      "ice_thickness_m": 1.8,
+      "ice_temperature_c": -15.0,
+      "seawater_conductivity_s_m": 4.2,
+      "receiver_depth_m": 60.0,
+      "horizontal_distance_m": 220.0,
+      "environment_noise_asd_pt_rt_hz": 0.2
+    },
+    "after_environment": {
+      "ice_thickness_m": 1.8,
+      "ice_temperature_c": -15.0,
+      "seawater_conductivity_s_m": 4.2,
+      "receiver_depth_m": 60.0,
+      "horizontal_distance_m": 220.0,
+      "environment_noise_asd_pt_rt_hz": 0.4
+    }
+  }
+}
