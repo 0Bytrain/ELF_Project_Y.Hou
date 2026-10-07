@@ -5,6 +5,7 @@ import hashlib
 import itertools
 import json
 import math
+import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -164,7 +165,15 @@ def save_json(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(path.name + ".tmp")
     temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
-    temporary.replace(path)
+    # Windows: an antivirus/indexer can briefly lock the target file; retry the rename.
+    for attempt in range(6):
+        try:
+            temporary.replace(path)
+            return
+        except PermissionError:
+            if attempt == 5:
+                raise
+            time.sleep(0.25)
 
 
 def quick_config(cfg):

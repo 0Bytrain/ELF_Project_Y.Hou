@@ -92,13 +92,14 @@ def train(cfg, table, scenario=None, occupied_bands=None):
     shift = cfg.get("channel_shift") or {}
     shift_enabled = bool(shift.get("enabled"))
     shift_episode = int(shift.get("episode", 0)) if shift_enabled else None
+    fixed_environment = cfg.get("fixed_environment")
     for episode in range(1, settings["episodes"] + 1):#主循环
         fraction = min(1, (episode - 1) / max(1, settings["episodes"] * settings["epsilon_decay_fraction"]))
         epsilon = settings["epsilon_start"] + fraction * (settings["epsilon_end"] - settings["epsilon_start"])
-        phase_environment = None
+        phase_environment = fixed_environment
         if shift_enabled:
             phase_environment = shift["after_environment"] if episode >= shift_episode else shift["before_environment"]
-        state, mask = env.reset(environment=phase_environment, occupied_bands=occupied_bands)#每轮的重采样环境（突变实验时按轮数切换）
+        state, mask = env.reset(environment=phase_environment, occupied_bands=occupied_bands)#每轮的重采样环境（对比实验时固定信道）
         records, losses = [], []
         done = False
         while not done:
