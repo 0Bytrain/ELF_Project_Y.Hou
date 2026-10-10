@@ -96,6 +96,7 @@ def main():
     bottom.axhline(-args.tolerance * 100, color=RED, linestyle="--", linewidth=1.0)
     bottom.set(xlabel="Training episode (adaptation process)",
                ylabel="Validation BER vs baseline (%)")
+    bottom.yaxis.labelpad = 14  # push the long label left so it clears the upper panel's tick
     bottom.set_ylim(-30, 80)  # zoom on the criterion region; the early transient goes off-scale
     bottom.grid(alpha=0.2)
     bottom.legend(fontsize=8, loc="upper right", framealpha=0.9)

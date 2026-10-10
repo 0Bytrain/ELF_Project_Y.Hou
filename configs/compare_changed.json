@@ -182,11 +182,11 @@
     "target_bit_errors": 300
   },
   "fixed_environment": {
-    "ice_thickness_m": 1.8,
-    "ice_temperature_c": -15.0,
-    "seawater_conductivity_s_m": 4.2,
-    "receiver_depth_m": 60.0,
-    "horizontal_distance_m": 220.0,
-    "environment_noise_asd_pt_rt_hz": 0.35
+      "ice_thickness_m": 1.5,
+      "ice_temperature_c": -10.0,
+      "seawater_conductivity_s_m": 4.0,
+      "receiver_depth_m": 50.0,
+      "horizontal_distance_m": 200.0,
+      "environment_noise_asd_pt_rt_hz": 0.0
   }
 }
