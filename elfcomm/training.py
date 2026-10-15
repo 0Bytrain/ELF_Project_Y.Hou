@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from .config import action_shape, fingerprint, resolve_path, save_json
+from .config import ENVIRONMENT_KEYS, action_shape, fingerprint, resolve_path, save_json
 from .dqn import DQNAgent
 from .environment import CommunicationEnvironment
 
@@ -90,10 +90,19 @@ def train(cfg, table, scenario=None, occupied_bands=None):
     best_reward = -np.inf
     start = time.perf_counter()
     fixed_environment = cfg.get("fixed_environment")
+    channel_shift = cfg.get("channel_shift")#信道中途切换配置（可选）
+    if channel_shift is not None:
+        shifted = channel_shift["environment"]
+        if set(shifted) != set(ENVIRONMENT_KEYS) or not all(np.isfinite(v) for v in shifted.values()):
+            raise ValueError("channel_shift.environment must give exactly the six finite physical parameters")
+        if not 0 < int(channel_shift["episode"]) < settings["episodes"]:
+            raise ValueError("channel_shift.episode must lie inside the run")
     for episode in range(1, settings["episodes"] + 1):#主循环
         fraction = min(1, (episode - 1) / max(1, settings["episodes"] * settings["epsilon_decay_fraction"]))
         epsilon = settings["epsilon_start"] + fraction * (settings["epsilon_end"] - settings["epsilon_start"])
         phase_environment = fixed_environment
+        if channel_shift is not None and episode > int(channel_shift["episode"]):
+            phase_environment = channel_shift["environment"]#切换点之后按新信道继续训练与验证
         state, mask = env.reset(environment=phase_environment, occupied_bands=occupied_bands)#每轮的重采样环境（对比实验时固定信道）
         records, losses = [], []
         done = False

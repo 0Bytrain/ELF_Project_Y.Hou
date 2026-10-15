@@ -4,11 +4,20 @@
     "ice_temperature_c": -15.0,
     "seawater_conductivity_s_m": 4.2,
     "receiver_depth_m": 60.0,
-    "horizontal_distance_m": 220.0,
-    "environment_noise_asd_pt_rt_hz": 0.2
+    "horizontal_distance_m": 100000.0,
+    "environment_noise_asd_pt_rt_hz": 2.9
   },
   "occupied_bands": [
-    {"low_hz": 4.0, "high_hz": 8.0, "mode": "hard"},
-    {"low_hz": 16.0, "high_hz": 20.0, "mode": "soft", "interference_asd_pt_rt_hz": 1.0}
+    {
+      "low_hz": 4.0,
+      "high_hz": 8.0,
+      "mode": "hard"
+    },
+    {
+      "low_hz": 16.0,
+      "high_hz": 20.0,
+      "mode": "soft",
+      "interference_asd_pt_rt_hz": 1.0
+    }
   ]
 }

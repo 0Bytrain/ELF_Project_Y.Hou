@@ -132,7 +132,7 @@ class RelativeChannel:
             power = sum(b.get("interference_asd_pt_rt_hz", 0) ** 2 for b in occupied_bands
                         if b["mode"] == "soft" and b["low_hz"] <= frequency <= b["high_hz"])
             soft.append(np.log1p(power / self.sensor_psd) / 10)
-        return np.concatenate([reference_snr / 30, hard, soft]).astype(np.float32)
+        return np.concatenate([reference_snr / 60, hard, soft]).astype(np.float32)  # 特征归一化上限 60 dB（参考点 42 dB 锚）
 
     def evaluate_many(self, actions, env, occupied_bands):
         frequencies = np.array([a.frequency_hz for a in actions])

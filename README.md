@@ -85,7 +85,7 @@ python run.py decide --ice-thickness 1.8 --ice-temperature -15 --water-conductiv
 python run.py decide --quick --scenario configs/scenario_occupied.json
 ```
 
-`--noise-asd` 是接收位置处的**环境磁场噪声幅度谱密度**，单位 pT/sqrt(Hz)，与固定的接收机 0.1 pT RMS 分开。默认环境范围 0.01–1 pT/sqrt(Hz) 是用于策略敏感性训练的假设扫描范围，不是极地现场测量统计。
+`--noise-asd` 是接收位置处的**环境磁场噪声幅度谱密度**，单位 pT/sqrt(Hz)，与固定的接收机 0.1 pT RMS 分开。默认环境范围 1–8 pT/sqrt(Hz) 是用于策略敏感性训练的假设扫描范围（2026-10 按 42 dB 参考锚重新标定；仍非现场测量统计，待实测/ITU 数据锚定）。
 
 ## 约定的系统参数
 
@@ -93,18 +93,18 @@ python run.py decide --quick --scenario configs/scenario_occupied.json
 - 调制：BPSK、Gray QPSK、MSK；Polar 名义码率 1/3、1/2、2/3、3/4。
 - Polar：N=256，CRC-11，CA-SCL 列表 8，PW 冻结位构造。`K=round(N*rate)` 包含 CRC，载荷长度为 `K-11`，因此实际码率可能略偏离名义值；这是独立 Polar 实现，不声称 5G 标准兼容。
 - 符号率：0.25、0.5、2/3 sym/s。动作张量形状为 13×3×4×3，共 **468 个动作**。
-- 标定环境：水平 200 m、冰水界面下 50 m、水深 100 m、冰厚 1.5 m、冰温 -10°C、海水电导率 4 S/m。
-- 训练范围：冰厚 1–2 m，冰温 -25 至 -2°C，海水电导率 2.5–5 S/m，深度 30–70 m，水平距离 150–250 m。每个 episode 重采样，之后作有界缓慢随机变化。步长按决策步建模，不是实测环境时间过程。
+- 标定环境：水平 100 km、冰水界面下 50 m、水深 100 m、冰厚 1.5 m、冰温 -10°C、海水电导率 4 S/m。
+- 训练范围：冰厚 1–2 m，冰温 -25 至 -2°C，海水电导率 2.5–5 S/m，深度 30–70 m，水平距离 80–120 km。每个 episode 重采样，之后作有界缓慢随机变化。步长按决策步建模，不是实测环境时间过程。
 - 波形占用带宽上限 1 Hz。PSK 用 `(1+0.35)*Rs`；MSK 用首零点主瓣宽度 `1.5*Rs`。MSK 有旁瓣，保护带规则是简化的频谱接入约束，不等于严格的全频带零泄漏保证。
 
 **1 bit/s 目前是优化目标，不是可保证的硬约束。** N256、名义码率 3/4、QPSK、Rs=2/3 时，载荷为 181 bit；加入 16 个前导符号后，无误帧的最大有效吞吐量为 `181/216 ≈ 0.838 bit/s`。程序保留低于目标的结果，不篡改符号率或忽略开销来满足指标。
 
 ## 相对磁场链路及噪声
 
-参考接收机噪声 PSD 为 `0.1^2/1 = 0.01 pT²/Hz`。参考环境环境噪声设为 0，20 dB 基准对应假设的接收信号 RMS 为 1 pT。
+参考接收机噪声 PSD 为 `0.1^2/1 = 0.01 pT²/Hz`。参考环境环境噪声设为 0，42 dB 基准对应假设的接收信号 RMS 约为 12.6 pT（由 ITU 场强与海水衰减折算的模型假设值，对应 30 Hz、100 km 参考点）。**口径说明（2026-10）：42 dB 仅作为信号电平的编码口径；项目链路信噪比一律按"含环境噪声"口径表述——实际工作信噪比取决于环境噪声取值，约 5–15 dB 量级。**
 
 ```text
-B_rx(f,e) = B_rx_ref * |H_B(f,e) / H_B(5 Hz,e_ref)|
+B_rx(f,e) = B_rx_ref * |H_B(f,e) / H_B(30 Hz,e_ref)|
 noise_power = effective_noise_PSD * occupied_bandwidth
 SNR = signal_mean_square / noise_power
 Es/N0 = signal_mean_square / (effective_noise_PSD * symbol_rate)
@@ -112,7 +112,7 @@ Es/N0 = signal_mean_square / (effective_noise_PSD * symbol_rate)
 
 只有初始参考场标定一次，不对每个新环境重新归一化。传感器 PSD、环境 PSD、软占用 PSD 按不相关功率相加。环境 PSD 暂按 `(f/5Hz)^(-1)` 变化，可配置；这是合成噪声模型，不声称复现 ITU 噪声表或海洋实测谱。
 
-`H_B` 采用空气—有限冰层—海水的法向入射稳定多反射公式，然后在海水中传播至接收深度。先求电场传输，再按两侧波阻抗转换为**磁场**传输；不会直接把电场系数或 dBm 与 pT 相减。海床默认不参与反射。水平距离通过 `(200m/r)^p` 修正，默认 `p=1`；这是显式的相对几何假设，不是发射天线的近场解。
+`H_B` 采用空气—有限冰层—海水的法向入射稳定多反射公式，然后在海水中传播至接收深度。先求电场传输，再按两侧波阻抗转换为**磁场**传输；不会直接把电场系数或 dBm 与 pT 相减。海床默认不参与反射。水平距离通过 `(d_ref/r)^p` 修正（`d_ref` 为参考点距离 100 km），默认 `p=1`；这是显式的相对几何假设，不是发射天线的近场解。
 
 该模块参考 `E:/LFCommSystem/PolarCrossIceELF` 的 Debye、传播常数、层间反射约定重新用 Python 实现，无 MATLAB 运行依赖。没有采用 ELF_PINN 原来的长距离波导参数来代替本项目 200 m 场景。
 

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "seed": 20260924,
-  "output_dir": "outputs/compare/changed",
-  "run_label": "retrain_comparison_changed",
+  "output_dir": "outputs/shift",
+  "run_label": "mid_run_channel_shift",
   "actions": {
     "frequency_hz": [
       5,
@@ -44,8 +44,8 @@
   "link": {
     "calibration_mode": "relative",
     "fixed_tx_power_kw": 500.0,
-    "reference_snr_db": 20.0,
-    "reference_frequency_hz": 5.0,
+    "reference_snr_db": 42.0,
+    "reference_frequency_hz": 30.0,
     "reference_noise_bandwidth_hz": 1.0,
     "receiver_noise_rms_pt": 0.1,
     "source_spectrum": "flat_field_assumption",
@@ -64,7 +64,7 @@
       "ice_temperature_c": -10.0,
       "seawater_conductivity_s_m": 4.0,
       "receiver_depth_m": 50.0,
-      "horizontal_distance_m": 200.0,
+      "horizontal_distance_m": 100000.0,
       "environment_noise_asd_pt_rt_hz": 0.0
     },
     "water_depth_m": 100.0,
@@ -97,12 +97,12 @@
         70.0
       ],
       "horizontal_distance_m": [
-        150.0,
-        250.0
+        80000.0,
+        120000.0
       ],
       "environment_noise_asd_pt_rt_hz": [
-        0.01,
-        1.0
+        1.0,
+        8.0
       ]
     },
     "step_drift_fraction": 0.01,
@@ -156,7 +156,7 @@
     "path": "outputs/ber_table.json"
   },
   "training": {
-    "episodes": 500,
+    "episodes": 1000,
     "steps_per_episode": 24,
     "gamma": 0.95,
     "learning_rate": 0.0003,
@@ -182,11 +182,22 @@
     "target_bit_errors": 300
   },
   "fixed_environment": {
+    "ice_thickness_m": 1.8,
+    "ice_temperature_c": -15.0,
+    "seawater_conductivity_s_m": 4.2,
+    "receiver_depth_m": 60.0,
+    "horizontal_distance_m": 100000.0,
+    "environment_noise_asd_pt_rt_hz": 2.88
+  },
+  "channel_shift": {
+    "episode": 300,
+    "environment": {
       "ice_thickness_m": 1.8,
       "ice_temperature_c": -15.0,
       "seawater_conductivity_s_m": 4.2,
-      "receiver_depth_m": 60.0,
-      "horizontal_distance_m": 220.0,
-      "environment_noise_asd_pt_rt_hz": 0.2
+      "receiver_depth_m": 62.0,
+      "horizontal_distance_m": 100000.0,
+      "environment_noise_asd_pt_rt_hz": 3.6
+    }
   }
 }

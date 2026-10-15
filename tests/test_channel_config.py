@@ -14,16 +14,16 @@ def cfg():
     return load_config()
 
 
-def test_reference_calibration_is_20_db_at_reference_noise_bandwidth(cfg):
+def test_reference_calibration_matches_configured_anchor(cfg):
     channel = RelativeChannel(cfg)
     link = cfg["link"]
     env = copy.deepcopy(link["reference_environment"])
     signal = channel.signal_mean_square(link["reference_frequency_hz"], env)
     noise = channel.background_noise_psd(link["reference_frequency_hz"], env)
     ratio = signal / (noise * link["reference_noise_bandwidth_hz"])
-    assert 10 * np.log10(ratio) == pytest.approx(20.0)
-    assert np.sqrt(signal) == pytest.approx(1.0)
-    assert np.sqrt(noise * link["reference_noise_bandwidth_hz"]) == pytest.approx(0.1)
+    assert 10 * np.log10(ratio) == pytest.approx(link["reference_snr_db"])
+    assert np.sqrt(signal) == pytest.approx(link["receiver_noise_rms_pt"] * 10 ** (link["reference_snr_db"] / 20))
+    assert np.sqrt(noise * link["reference_noise_bandwidth_hz"]) == pytest.approx(link["receiver_noise_rms_pt"])
 
 
 def test_noise_rms_scales_with_sqrt_bandwidth(cfg):
