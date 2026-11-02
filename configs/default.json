@@ -1,33 +1,168 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "seed": 20260924,
-  "output_dir": "outputs",
+  "output_dir": "outputs/ber1e5_learning_default",
   "actions": {
     "frequency_hz": [
-      5,
-      7,
-      9,
-      11,
-      13,
-      15,
       17,
-      19,
-      21,
-      23,
       25,
-      27,
-      29
+      33,
+      41,
+      55,
+      60,
+      65,
+      70,
+      75,
+      80,
+      85,
+      90,
+      95,
+      100,
+      105,
+      110,
+      115,
+      120,
+      125,
+      130,
+      135,
+      140,
+      145,
+      150,
+      155,
+      160,
+      165,
+      170,
+      175,
+      180,
+      185,
+      190,
+      195,
+      200,
+      205,
+      210,
+      215,
+      220,
+      225,
+      230,
+      235,
+      240,
+      245,
+      250,
+      255,
+      260,
+      265,
+      270,
+      275,
+      280,
+      285,
+      290,
+      295,
+      300
+    ],
+    "tx_power_kw": [
+      5,
+      10,
+      15,
+      20,
+      25,
+      30,
+      40,
+      50,
+      62.5,
+      100,
+      150,
+      200,
+      250,
+      500
+    ],
+    "coding_mode": [
+      [
+        "Polar",
+        0.3333333333333333
+      ],
+      [
+        "Polar",
+        0.5
+      ],
+      [
+        "Polar",
+        0.6666666666666666
+      ],
+      [
+        "Polar",
+        0.75
+      ],
+      [
+        "CC",
+        0.5
+      ],
+      [
+        "CC",
+        0.6666666666666666
+      ],
+      [
+        "CC",
+        0.75
+      ],
+      [
+        "BCH",
+        0.3568627450980392
+      ],
+      [
+        "BCH",
+        0.5137254901960784
+      ],
+      [
+        "BCH",
+        0.6705882352941176
+      ],
+      [
+        "BCH",
+        0.7490196078431373
+      ]
+    ],
+    "waveform_mode": [
+      [
+        "BPSK",
+        0.25
+      ],
+      [
+        "BPSK",
+        0.5
+      ],
+      [
+        "BPSK",
+        0.6666666666666666
+      ],
+      [
+        "QPSK",
+        0.25
+      ],
+      [
+        "QPSK",
+        0.5
+      ],
+      [
+        "QPSK",
+        0.6666666666666666
+      ],
+      [
+        "MSK",
+        0.25
+      ],
+      [
+        "MSK",
+        0.5
+      ],
+      [
+        "MSK",
+        0.6666666666666666
+      ]
     ],
     "modulation": [
       "BPSK",
       "QPSK",
       "MSK"
-    ],
-    "code_rate": [
-      0.3333333333333333,
-      0.5,
-      0.6666666666666666,
-      0.75
     ],
     "symbol_rate": [
       0.25,
@@ -41,21 +176,29 @@
     "list_size": 8
   },
   "link": {
-    "calibration_mode": "relative",
-    "fixed_tx_power_kw": 500.0,
-    "reference_snr_db": 42.0,
+    "calibration_mode": "relative_attenuation_anchor",
+    "source_model": "anchor",
+    "reference_tx_power_kw": 500.0,
     "reference_frequency_hz": 30.0,
     "reference_noise_bandwidth_hz": 1.0,
     "receiver_noise_rms_pt": 0.1,
     "source_spectrum": "flat_field_assumption",
-    "range_spreading_exponent": 1.0,
-    "max_occupied_bandwidth_hz": 1.0,
+    "field_anchor_distance_m": 1950000.0,
+    "field_anchor_e_db_uv_m": 57.0,
+    "reference_signal_rms_pt": 1.5906,
+    "range_model": "lwpc_30hz_table",
+    "range_table_path": "data/lwpc_30hz_range.csv",
+    "range_table_valid_km": [
+      1200.0,
+      2950.0
+    ],
+    "max_occupied_bandwidth_hz": 1.2,
     "rrc_rolloff": 0.35,
     "msk_occupied_bandwidth_factor": 1.5,
     "guard_band_hz": 0.5,
     "allowed_band_hz": [
       3.0,
-      30.0
+      300.5
     ],
     "noise_spectrum_exponent": 1.0,
     "reference_environment": {
@@ -63,8 +206,8 @@
       "ice_temperature_c": -10.0,
       "seawater_conductivity_s_m": 4.0,
       "receiver_depth_m": 50.0,
-      "horizontal_distance_m": 100000.0,
-      "environment_noise_asd_pt_rt_hz": 0.0
+      "horizontal_distance_m": 1950000.0,
+      "environment_noise_asd_pt_rt_hz": 0.316227766
     },
     "water_depth_m": 100.0,
     "seawater_relative_permittivity": 80.0,
@@ -75,6 +218,67 @@
       "relaxation_model": "arrhenius_pure_ice_approximation",
       "relaxation_prefactor_s": 5.3e-16,
       "relaxation_activation_ev": 0.571
+    },
+    "max_apparent_power_kva": 1200.0,
+    "rated_active_power_kw": 500.0,
+    "power_factor": 0.4167,
+    "propagation_model": "lu_attenuation",
+    "ionosphere_mode": "day",
+    "beta_scale": 1.0,
+    "propagation_min_km": 1200.0,
+    "ionosphere": {
+      "H_km": 70.0,
+      "sigma0_km": 3.33,
+      "sigma1_km": 3.33,
+      "hE_km": 90.0,
+      "sigmaE_s_m": 8e-06
+    },
+    "antenna": {
+      "current_moment_a_m": 30000000.0,
+      "current_moment_reference_frequency_hz": 30.0,
+      "effective_length_m": null,
+      "unit_convention": "engineering",
+      "pattern_factor": 1.0,
+      "input_resistance_ohm": [
+        [
+          0.1,
+          10.4
+        ],
+        [
+          10.0,
+          11.7
+        ],
+        [
+          100.0,
+          26.2
+        ],
+        [
+          300.0,
+          309.0
+        ]
+      ],
+      "radiation_resistance_ohm": [
+        [
+          0.1,
+          4.4e-10
+        ],
+        [
+          10.0,
+          4.4e-06
+        ],
+        [
+          100.0,
+          0.00044
+        ],
+        [
+          300.0,
+          0.004
+        ]
+      ],
+      "antenna_site_conductivity_s_m": 0.0001,
+      "path_ground_conductivity_s_m": 0.0001,
+      "ionosphere_conductivity_s_m": 1e-05,
+      "earth_radius_km": 6371.0
     }
   },
   "environment": {
@@ -93,45 +297,51 @@
       ],
       "receiver_depth_m": [
         30.0,
-        70.0
+        95.0
       ],
       "horizontal_distance_m": [
-        80000.0,
-        120000.0
+        1200000.0,
+        3150000.0
       ],
       "environment_noise_asd_pt_rt_hz": [
-        1.0,
-        8.0
+        0.1,
+        1.0
       ]
     },
     "step_drift_fraction": 0.01,
     "noise_step_log_std": 0.08,
     "occupied_bands": [],
     "random_occupancy": true,
-    "random_band_count_max": 2,
+    "random_band_count_max": 3,
     "random_band_width_hz": [
-      0.5,
-      2.5
+      1.2,
+      1.2
     ],
-    "random_hard_probability": 0.7,
+    "random_hard_probability": 1.0,
     "random_interference_asd_pt_rt_hz": [
       0.3,
       3.0
     ],
-    "occupancy_change_probability": 0.04
+    "occupancy_change_probability": 0.04,
+    "random_occupancy_min_hz": 60.0
   },
   "objective": {
-    "target_ber": 0.0001,
-    "target_goodput_bps": 1.0,
+    "mode": "ber_constrained_min_power",
+    "target_ber": 1e-05,
+    "target_goodput_bps": 0.6,
     "preamble_symbols": 16,
     "reward_goodput_weight": 1.0,
-    "reward_ber_violation_weight": 1.0,
-    "reward_rate_shortfall_weight": 0.1,
+    "reward_ber_violation_weight": 5.0,
     "switch_penalty": 0.02,
-    "outage_reward": -1.0
+    "outage_reward": -1.0,
+    "reward_power_weight": 0.3,
+    "reward_rate_shortfall_weight": 0.1
   },
   "ber_table": {
     "esn0_db": [
+      -18,
+      -15,
+      -12,
       -9,
       -6,
       -3,
@@ -147,37 +357,71 @@
       21,
       24,
       27,
-      30
+      30,
+      33,
+      36,
+      40
     ],
     "min_frames": 32,
-    "max_frames": 256,
+    "max_frames": 512,
     "target_bit_errors": 200,
-    "path": "outputs/ber_table.json"
+    "path": "outputs/plan_ber/ber_table_cc.json",
+    "existing_only": true
   },
   "training": {
-    "episodes": 500,
+    "episodes": 1200,
     "steps_per_episode": 24,
     "gamma": 0.95,
-    "learning_rate": 0.0003,
+    "learning_rate": 0.0001,
     "batch_size": 128,
-    "replay_capacity": 50000,
+    "replay_capacity": 10000,
     "warmup_steps": 512,
-    "target_tau": 0.01,
+    "target_tau": 0.005,
     "tensor_rank": 12,
     "hidden_size": 128,
     "gradient_clip": 5.0,
     "epsilon_start": 1.0,
-    "epsilon_end": 0.05,
-    "epsilon_decay_fraction": 0.8,
+    "epsilon_end": 0.0,
+    "epsilon_decay_fraction": 0.75,
     "evaluation_interval": 20,
-    "evaluation_episodes": 12,
+    "evaluation_episodes": 1,
     "ema_alpha": 0.1,
     "device": "cpu",
-    "torch_threads": 2
+    "torch_threads": 2,
+    "learning_rate_final": 3e-05,
+    "evaluation_ema_alpha": 0.2,
+    "convergence": {
+      "enabled": false,
+      "window": 10,
+      "min_phase_episodes": 200,
+      "power_tolerance_kw": 0.0,
+      "reward_tolerance": 0.02,
+      "max_configuration_switch_fraction": 0.0,
+      "stop_after_final_convergence": false,
+      "candidate_lock_evaluations": 5,
+      "require_exploration_finished": true
+    },
+    "dynamic_environment": true,
+    "ber_feasibility_filter": false,
+    "exploration_schedule": "phase_cosine",
+    "replay_balance_fraction": 0.5,
+    "reset_replay_on_channel_shift": true,
+    "additive_value_heads": true,
+    "decision_plot_window": 25,
+    "structured_exploration": {
+      "enabled": true,
+      "global_fraction": 0.5,
+      "frequency_neighbor_radius": 3
+    }
   },
   "validation": {
     "min_frames": 100,
     "max_frames": 5000,
     "target_bit_errors": 300
+  },
+  "decision": {
+    "ber_feasibility_filter": true,
+    "same_power_goodput_gain_bps": 0.01,
+    "same_power_confirmation_rounds": 5
   }
 }

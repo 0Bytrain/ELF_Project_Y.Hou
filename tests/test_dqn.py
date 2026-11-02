@@ -85,7 +85,7 @@ class TensorDQNTests(unittest.TestCase):
         self.assertTrue(all(parameter.grad is None for parameter in agent.target.parameters()))
         with tempfile.TemporaryDirectory() as temp:
             checkpoint = Path(temp) / "agent.pt"
-            agent.save(checkpoint)
+            agent.save(checkpoint, include_replay=True)
             restored = self.make_agent(seed=99)
             restored.load(checkpoint)
             states = torch.ones(3, 5)
@@ -96,6 +96,17 @@ class TensorDQNTests(unittest.TestCase):
             self.assertEqual(agent.learn(), restored.learn())
             for a, b in zip(agent.online.parameters(), restored.online.parameters()):
                 torch.testing.assert_close(a, b, rtol=0, atol=0)
+
+    def test_default_checkpoint_omits_replay(self):
+        agent = self.make_agent()
+        self.populate(agent)
+        with tempfile.TemporaryDirectory() as temp:
+            checkpoint = Path(temp) / "agent.pt"
+            agent.save(checkpoint)
+            restored = self.make_agent(seed=99)
+            restored.load(checkpoint)
+            self.assertEqual(len(restored.replay), 0)
+            self.assertIsNone(restored.learn())
 
     def test_replay_copies_input_arrays(self):
         agent = self.make_agent()

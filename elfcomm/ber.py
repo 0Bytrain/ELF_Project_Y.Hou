@@ -1,12 +1,18 @@
-"""Monte Carlo post-Polar payload BER, packet loss and confidence metadata."""
+"""Monte Carlo payload BER for the selected coding scheme.
+
+The frame contract is shared by Polar and CC: ``payload_bits`` excludes the
+common CRC-11, and ``fer`` counts payload errors or CRC rejection.  The codec
+reports its own actual rate and coded length, so nominal rates are not silently
+treated as exact rates.
+"""
 
 from __future__ import annotations
 import numpy as np
 from scipy.stats import beta
+from .codecs import build_codec
 from .modem import transmit_llr, bits_per_symbol, MODEM_VERSION
-from .polar import PolarCode
 
-BER_SCHEMA_VERSION = "payload-counts-fixed-budget-cp-v1"
+BER_SCHEMA_VERSION = "payload-counts-multicodec-v1"
 
 
 def binomial_upper95(errors, trials):
@@ -18,14 +24,15 @@ def binomial_upper95(errors, trials):
     return float(beta.ppf(0.95, errors + 1, trials - errors))
 
 
-def simulate_link(modulation, rate, esn0_db, n=256, crc_bits=11, list_size=8,
-                  seed=0, min_frames=32, max_frames=256, target_bit_errors=100):
+def simulate_link(coding_scheme, modulation, rate, esn0_db, n=256, crc_bits=11,
+                  list_size=8, seed=0, min_frames=32, max_frames=256,
+                  target_bit_errors=100):
     """Count actual decoded payload errors, including failed-CRC frames.
 
     ``fer`` counts payload frame errors OR CRC rejection, as required for
     throughput. ``ber`` counts payload mismatches even on rejected frames.
     Bit upper limits assume independent bits and are merely nominal because
-    errors within Polar words are correlated. Frame limits can conservatively
+    errors within a code word are correlated. Frame limits can conservatively
     bound BER only with independent frames and a fixed sample budget. With
     adaptive target-error stopping both reported limits are descriptive and
     must not be used to claim verified reliability.
@@ -33,7 +40,8 @@ def simulate_link(modulation, rate, esn0_db, n=256, crc_bits=11, list_size=8,
     bits_per_symbol(modulation)
     if not (1 <= min_frames <= max_frames) or target_bit_errors < 1:
         raise ValueError("Require 1 <= min_frames <= max_frames and positive target errors")
-    codec = PolarCode(n=n, rate=rate, crc_bits=crc_bits, list_size=list_size)
+    codec = build_codec(coding_scheme, n=n, rate=rate, crc_bits=crc_bits,
+                        list_size=list_size)
     rng = np.random.default_rng(seed)
     bit_errors = total_bits = frame_errors = total_frames = crc_failures = 0
     payload_frame_errors = 0
@@ -54,9 +62,12 @@ def simulate_link(modulation, rate, esn0_db, n=256, crc_bits=11, list_size=8,
             break
     fixed_budget = min_frames == max_frames
     return {
-        "modulation": modulation.upper(), "nominal_rate": float(rate),
+        "coding_scheme": coding_scheme, "nominal_rate": float(rate),
         "actual_rate": codec.actual_rate, "payload_rate": codec.payload_rate,
-        "esn0_db": float(esn0_db), "n": n, "payload_bits_per_frame": codec.payload_bits,
+        "modulation": modulation.upper(), "esn0_db": float(esn0_db),
+        "n": n, "coded_bits_per_frame": codec.coded_bits,
+        "information_bits_per_frame": codec.information_bits,
+        "payload_bits_per_frame": codec.payload_bits,
         "crc_bits": crc_bits, "list_size": list_size, "seed": int(seed),
         "bit_errors": bit_errors, "total_bits": total_bits,
         "frame_errors": frame_errors, "payload_frame_errors": payload_frame_errors,
@@ -67,7 +78,7 @@ def simulate_link(modulation, rate, esn0_db, n=256, crc_bits=11, list_size=8,
         "zero_bit_errors_observed": bit_errors == 0,
         "stop_reason": stop_reason, "fixed_frame_budget": fixed_budget,
         "confidence_note": (
-            "Bit CI is nominal independent-bit approximation; Polar errors are correlated. "
+            "Bit CI is nominal independent-bit approximation; coded bits are correlated. "
             + ("Frame CI is fixed-budget iid-frame CP; it conservatively bounds payload BER."
                if fixed_budget else
                "Adaptive stopping: all CP endpoints are descriptive, not reliability certificates.")
